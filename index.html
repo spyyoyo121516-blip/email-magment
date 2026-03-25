@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmailVault</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+:root{
+--bg:#0a0a0f;--card:#12121a;--card2:#1a1a2e;--accent:#6c5ce7;--accent2:#a855f7;
+--green:#10b981;--blue:#3b82f6;--red:#ef4444;--orange:#f59e0b;--pink:#ec4899;
+--text:#e2e8f0;--text2:#94a3b8;--border:#1e1e32;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.glow{position:fixed;width:400px;height:400px;border-radius:50%;filter:blur(150px);opacity:.15;pointer-events:none;z-index:0;}
+.glow1{top:-100px;left:-100px;background:var(--accent);}
+.glow2{bottom:-100px;right:-100px;background:var(--accent2);}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 30px;}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;}
+.logo{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo span{font-weight:400;opacity:.7;}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{padding:8px 20px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:.3s;border:none;background:none;}
+.nav-tab:hover{color:var(--text);background:rgba(108,92,231,.1);}
+.nav-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+
+/* MAIN */
+.container{max-width:1200px;margin:0 auto;padding:30px;position:relative;z-index:1;}
+.page{display:none;}.page.active{display:block;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:30px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center;transition:.3s;}
+.stat:hover{transform:translateY(-3px);border-color:var(--accent);}
+.stat-num{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-label{font-size:11px;color:var(--text2);margin-top:4px;text-transform:uppercase;letter-spacing:1px;}
+
+/* ADD FORM */
+.add-section{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:30px;}
+.add-title{font-size:18px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.add-title .icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:12px;align-items:end;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:600;}
+.form-group input,.form-group select{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;font-family:inherit;transition:.3s;outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,92,231,.15);}
+.btn-add{padding:12px 28px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:700;font-size:14px;cursor:pointer;transition:.3s;white-space:nowrap;height:46px;font-family:inherit;}
+.btn-add:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(108,92,231,.4);}
+
+/* SEARCH */
+.search-bar{position:relative;margin-bottom:24px;}
+.search-bar input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px 14px 46px;color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:.3s;}
+.search-bar input:focus{border-color:var(--accent);}
+.search-bar svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text2);}
+
+/* EMAIL GRID */
+.email-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.email-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:.3s;position:relative;}
+.email-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.4);border-color:var(--accent);}
+.card-top{height:4px;}
+.card-body{padding:20px;}
+.card-name{font-size:16px;font-weight:700;margin-bottom:6px;}
+.card-email{font-size:13px;color:var(--accent2);margin-bottom:8px;word-break:break-all;}
+.card-provider{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.card-date{font-size:11px;color:var(--text2);margin-top:10px;}
+.card-del{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;border:none;background:rgba(239,68,68,.1);color:var(--red);cursor:pointer;font-size:14px;transition:.3s;display:flex;align-items:center;justify-content:center;}
+.card-del:hover{background:var(--red);color:#fff;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text2);}
+.empty-state .big{font-size:60px;margin-bottom:16px;}
+.empty-state p{font-size:16px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px;width:100%;max-width:480px;overflow:hidden;animation:modalIn .3s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.9)translateY(20px);}to{opacity:1;transform:scale(1)translateY(0);}}
+.modal-header{padding:24px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-header h2{font-size:20px;font-weight:700;}
+.modal-close{width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,.05);color:var(--text2);cursor:pointer;font-size:18px;transition:.3s;}
+.modal-close:hover{background:rgba(239,68,68,.2);color:var(--red);}
+.modal-body{padding:28px;}
+.modal-field{margin-bottom:20px;}
+.modal-field label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:600;display:block;margin-bottom:8px;}
+.modal-field-row{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+.modal-field-row span{flex:1;font-size:14px;word-break:break-all;}
+.modal-field-row .pw-dots{font-family:monospace;letter-spacing:3px;}
+.btn-copy{padding:6px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:.3s;white-space:nowrap;font-family:inherit;}
+.btn-copy:hover{transform:scale(1.05);}
+.btn-copy.copied{background:var(--green);}
+.btn-eye{padding:6px 10px;border:none;border-radius:8px;background:rgba(255,255,255,.05);color:var(--text2);cursor:pointer;font-size:14px;transition:.3s;font-family:inherit;}
+.btn-eye:hover{color:var(--text);}
+.modal-provider{display:inline-block;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:12px;}
+.modal-notes textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;min-height:70px;outline:none;transition:.3s;}
+.modal-notes textarea:focus{border-color:var(--accent);}
+.btn-save-notes{margin-top:8px;padding:8px 20px;border:none;border-radius:8px;background:var(--green);color:#fff;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit;}
+
+/* GUIDE PAGE */
+.guide-header{text-align:center;padding:40px 0 30px;}
+.guide-header h1{font-size:32px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;}
+.guide-header p{color:var(--text2);font-size:16px;}
+.guide-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;}
+.guide-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transition:.3s;position:relative;overflow:hidden;}
+.guide-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 40px rgba(0,0,0,.3);}
+.guide-card-top{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.guide-card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0;}
+.guide-card-title{font-size:18px;font-weight:700;}
+.guide-card-sub{font-size:12px;color:var(--text2);}
+.guide-steps{list-style:none;padding:0;}
+.guide-steps li{position:relative;padding:8px 0 8px 28px;font-size:13px;color:var(--text2);line-height:1.6;}
+.guide-steps li::before{content:attr(data-step);position:absolute;left:0;top:8px;width:20px;height:20px;border-radius:6px;background:rgba(108,92,231,.15);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.guide-btn{display:inline-block;margin-top:16px;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;color:#fff;transition:.3s;}
+.guide-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,.3);}
+.guide-tag{position:absolute;top:16px;right:16px;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.tag-free{background:rgba(16,185,129,.15);color:var(--green);}
+.tag-popular{background:rgba(168,85,247,.15);color:var(--accent2);}
+.tag-easy{background:rgba(59,130,246,.15);color:var(--blue);}
+.tip-box{background:linear-gradient(135deg,rgba(108,92,231,.1),rgba(168,85,247,.1));border:1px solid rgba(108,92,231,.2);border-radius:16px;padding:24px;margin-top:30px;text-align:center;}
+.tip-box h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--accent2);}
+.tip-box p{font-size:13px;color:var(--text2);line-height:1.7;}
+
+/* TOAST */
+.toast{position:fixed;bottom:30px;right:30px;background:var(--green);color:#fff;padding:14px 24px;border-radius:12px;font-weight:600;font-size:14px;z-index:300;transform:translateY(100px);opacity:0;transition:.4s;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+.form-row{grid-template-columns:1fr;}
+.stats{grid-template-columns:repeat(2,1fr);}
+.email-grid,.guide-cards{grid-template-columns:1fr;}
+.guide-header h1{font-size:24px;}
+}
+</style>
+</head>
+<body>
+<div class="glow glow1"></div>
+<div class="glow glow2"></div>
+
+<nav>
+<div class="nav-inner">
+<div class="logo">Email<span>Vault</span></div>
+<div class="nav-tabs">
+<div class="nav-tab active" onclick="showPage('dashboard')">My Emails</div>
+<div class="nav-tab" onclick="showPage('guide')">How to Create</div>
+</div>
+</div>
+</nav>
+
+<div class="container">
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+<div class="stats" id="stats"></div>
+
+<div class="add-section">
+<div class="add-title"><div class="icon">+</div> Add New Email</div>
+<div class="form-row">
+<div class="form-group"><label>Display Name</label><input type="text" id="inp-name" placeholder="John Doe"></div>
+<div class="form-group"><label>Email Address</label><input type="email" id="inp-email" placeholder="john@gmail.com"></div>
+<div class="form-group"><label>Password</label><input type="text" id="inp-pass" placeholder="••••••••"></div>
+<div class="form-group"><label>Provider</label>
+<select id="inp-provider">
+<option value="Gmail">Gmail</option>
+<option value="Outlook">Outlook</option>
+<option value="Yahoo">Yahoo</option>
+<option value="ProtonMail">ProtonMail</option>
+<option value="Tuta">Tuta</option>
+<option value="iCloud">iCloud</option>
+<option value="Other">Other</option>
+</select></div>
+<button class="btn-add" onclick="addEmail()">+ Add</button>
+</div>
+</div>
+
+<div class="search-bar">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+<input type="text" id="search" placeholder="Search your emails..." oninput="renderEmails()">
+</div>
+
+<div class="email-grid" id="email-grid"></div>
+</div>
+
+<!-- GUIDE PAGE -->
+<div id="page-guide" class="page">
+<div class="guide-header">
+<h1>How to Create an Email Account</h1>
+<p>Step-by-step guides for the most popular email providers</p>
+</div>
+<div class="guide-cards">
+
+<!-- GMAIL -->
+<div class="guide-card">
+<span class="guide-tag tag-popular">Most Popular</span>
+<div class="guide-card-top">
+<div class="guide-card-icon" style="background:rgba(234,67,53,.15);color:#ea4335;">G</div>
+<div><div class="guide-card-title">Gmail</div><div class="guide-card-sub">Google Account</div></div>
+</div>
+<ol class="guide-steps">
+<li data-step="1">Click the button below to open Gmail signup</li>
+<li data-step="2">Enter your First Name and Last Name</li>
+<li data-step="3">Pick a username — this will be your @gmail.com address</li>
+<li data-step="4">Create a strong password and confirm it</li>
+<li data-step="5">For phone number — click "Skip" if available, or use a recovery email instead</li>
+<li data-step="6">Accept Terms of Service and you are done!</li>
+</ol>
+<a href="https://accounts.google.com/signup" target="_blank" class="guide-btn" style="background:#ea4335;">Open Gmail Signup →</a>
+</div>
+
+<!-- OUTLOOK -->
+<div class="guide-card">
+<span class="guide-tag tag-popular">Popular</span>
+<div class="guide-card-top">
+<div class="guide-card-icon" style="background:rgba(0,120,212,.15);color:#0078d4;">O</div>
+<div><div class="guide-card-title">Outlook</div><div class="guide-card-sub">Microsoft Account</div></div>
+</div>
+<ol class="guide-steps">
+<li data-step="1">Click the button below to open Outlook signup</li>
+<li data-step="2">Click "Get a new email address"</li>
+<li data-step="3">Choose your @outlook.com address</li>
+<li data-step="4">Create a strong password</li>
+<li data-step="5">Enter your name and date of birth</li>
+<li data-step="6">Solve the puzzle/captcha — no phone needed!</li>
+</ol>
+<a href="https://signup.live.com/" target="_blank" class="guide-btn" style="background:#0078d4;">Open Outlook Signup →</a>
+</div>
+
+<!-- YAHOO -->
+<div class="guide-card">
+<div class="guide-card-top">
+<div class="guide-card-icon" style="background:rgba(110,64,170,.15);color:#6e40aa;">Y</div>
+<div><div class="guide-card-title">Yahoo Mail</div><div class="guide-card-sub">Yahoo Account</div></div>
+</div>
+<ol class="guide-steps">
+<li data-step="1">Click the button below to open Yahoo signup</li>
+<li data-step="2">Fill in your name, email address, password, and birthday</li>
+<li data-step="3">Phone number may be required — use any number to get a code</li>
+<li data-step="4">Verify the code and you are in!</li>
+</ol>
+<a href="https://login.yahoo.com/account/create" target="_blank" class="guide-btn" style="background:#6e40aa;">Open Yahoo Signup →</a>
+</div>
+
+<!-- PROTONMAIL -->
+<div class="guide-card">
+<span class="guide-tag tag-free">No Phone Needed</span>
+<div class="guide-card-top">
+<div class="guide-card-icon" style="background:rgba(99,71,217,.15);color:#6347d9;">P</div>
+<div><div class="guide-card-title">ProtonMail</div><div class="guide-card-sub">Encrypted & Private</div></div>
+</div>
+<ol class="guide-steps">
+<li data-step="1">Click the button below to open ProtonMail signup</li>
+<li data-step="2">Choose the FREE plan</li>
+<li data-step="3">Pick your @proton.me username</li>
+<li data-step="4">Create a password — no phone or other email needed!</li>
+<li data-step="5">Solve a simple puzzle (not a phone captcha)</li>
+<li data-step="6">Done! Fully private email, zero phone verification</li>
+</ol>
+<a href="https://account.proton.me/signup" target="_blank" class="guide-btn" style="background:#6347d9;">Open ProtonMail Signup →</a>
+</div>
+
+<!-- TUTA -->
+<div class="guide-card">
+<span class="guide-tag tag-free">No Phone Needed</span>
+<div class="guide-card-top">
+<div class="guide-card-icon" style="background:rgba(185,44,44,.15);color:#b92c2c;">T</div>
+<div><div class="guide-card-title">Tuta (Tutanota)</div><div class="guide-card-sub">Secure Email</div></div>
+</div>
+<ol class="guide-steps">
+<li data-step="1">Click the button below to open Tuta signup</li>
+<li data-step="2">Choose the FREE plan</li>
+<li data-step="3">Pick your @tuta.com username</li>
+<li data-step="4">Create a password — NO phone, NO other email needed</li>
+<li data-step="5">Accept terms and your account is created</li>
+<li data-step="6">Wait 48 hours for account activation (anti-spam measure)</li>
+</ol>
+<a href="https://app.tuta.com/signup" target="_blank" class="guide-btn" style="background:#b92c2c;">Open Tuta Signup →</a>
+</div>
+
+<!-- GMAIL TRICK -->
+<div class="guide-card">
+<span class="guide-tag tag-easy">Pro Trick</span>
+<div class="guide-card-top">
+<div class="guide-card-icon" style="background:rgba(16,185,129,.15);color:#10b981;">∞</div>
+<div><div class="guide-card-title">Gmail Unlimited Aliases</div><div class="guide-card-sub">One Gmail = Infinite Emails</div></div>
+</div>
+<ol class="guide-steps">
+<li data-step="1">If you already have one Gmail like john@gmail.com</li>
+<li data-step="2">You can use john+shop@gmail.com for shopping sites</li>
+<li data-step="3">Or john+social@gmail.com for social media</li>
+<li data-step="4">ALL emails go to your same inbox — john@gmail.com</li>
+<li data-step="5">Each alias works as a separate email for signups!</li>
+<li data-step="6">No limit — create as many as you want, instantly</li>
+</ol>
+<a href="https://mail.google.com" target="_blank" class="guide-btn" style="background:#10b981;">Open Gmail →</a>
+</div>
+
+</div>
+
+<div class="tip-box">
+<h3>💡 Pro Tips</h3>
+<p>ProtonMail and Tuta are the easiest — no phone number, no other email required.<br>
+For Gmail, try signing up from a fresh browser or incognito mode — sometimes the phone step can be skipped.<br>
+Use the Gmail Alias trick to get unlimited email addresses from just one account!<br>
+After creating your email, come back here and add it to your vault!</p>
+</div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+<div class="modal">
+<div class="modal-header">
+<h2 id="modal-title">Email Details</h2>
+<button class="modal-close" onclick="closeModal()">✕</button>
+</div>
+<div class="modal-body">
+<div id="modal-provider-badge" class="modal-provider"></div>
+<div class="modal-field">
+<label>Email Address</label>
+<div class="modal-field-row">
+<span id="modal-email"></span>
+<button class="btn-copy" onclick="copyText('modal-email',this)">Copy</button>
+</div>
+</div>
+<div class="modal-field">
+<label>Password</label>
+<div class="modal-field-row">
+<span id="modal-pass" class="pw-dots"></span>
+<button class="btn-eye" id="btn-eye" onclick="togglePass()">👁</button>
+<button class="btn-copy" onclick="copyPass(this)">Copy</button>
+</div>
+</div>
+<div class="modal-field">
+<label>Added On</label>
+<div class="modal-field-row">
+<span id="modal-date"></span>
+</div>
+</div>
+<div class="modal-notes">
+<label style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:600;display:block;margin-bottom:8px;">Notes</label>
+<textarea id="modal-notes" placeholder="Add private notes here..."></textarea>
+<button class="btn-save-notes" onclick="saveNotes()">Save Notes</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let emails=JSON.parse(localStorage.getItem('emailvault')||'[]');
+let currentId=null;
+let passVisible=false;
+const colors={Gmail:'#ea4335',Outlook:'#0078d4',Yahoo:'#6e40aa',ProtonMail:'#6347d9',Tuta:'#b92c2c',iCloud:'#333',Other:'#6c5ce7'};
+
+function showPage(p){
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+document.getElementById('page-'+p).classList.add('active');
+document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+if(p==='dashboard')document.querySelectorAll('.nav-tab')[0].classList.add('active');
+else document.querySelectorAll('.nav-tab')[1].classList.add('active');
+}
+
+function save(){localStorage.setItem('emailvault',JSON.stringify(emails));}
+
+function toast(msg){
+const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function addEmail(){
+const name=document.getElementById('inp-name').value.trim();
+const email=document.getElementById('inp-email').value.trim();
+const pass=document.getElementById('inp-pass').value.trim();
+const provider=document.getElementById('inp-provider').value;
+if(!name||!email||!pass){toast('Please fill all fields!');return;}
+emails.push({id:Date.now(),name,email,pass,provider,date:new Date().toLocaleDateString(),notes:''});
+save();renderEmails();
+document.getElementById('inp-name').value='';
+document.getElementById('inp-email').value='';
+document.getElementById('inp-pass').value='';
+toast('Email added successfully!');
+}
+
+function deleteEmail(id,e){
+e.stopPropagation();
+if(confirm('Delete this email?')){
+emails=emails.filter(x=>x.id!==id);save();renderEmails();toast('Email deleted');
+}}
+
+function renderStats(){
+const s=document.getElementById('stats');
+const total=emails.length;
+const gmail=emails.filter(x=>x.provider==='Gmail').length;
+const outlook=emails.filter(x=>x.provider==='Outlook').length;
+const proton=emails.filter(x=>x.provider==='ProtonMail').length;
+const other=total-gmail-outlook-proton;
+s.innerHTML=`
+<div class="stat"><div class="stat-num">${total}</div><div class="stat-label">Total Emails</div></div>
+<div class="stat"><div class="stat-num">${gmail}</div><div class="stat-label">Gmail</div></div>
+<div class="stat"><div class="stat-num">${outlook}</div><div class="stat-label">Outlook</div></div>
+<div class="stat"><div class="stat-num">${proton}</div><div class="stat-label">ProtonMail</div></div>
+<div class="stat"><div class="stat-num">${other}</div><div class="stat-label">Other</div></div>`;
+}
+
+function renderEmails(){
+renderStats();
+const q=document.getElementById('search').value.toLowerCase();
+const grid=document.getElementById('email-grid');
+const filtered=emails.filter(x=>x.name.toLowerCase().includes(q)||x.email.toLowerCase().includes(q)||x.provider.toLowerCase().includes(q));
+if(filtered.length===0){
+grid.innerHTML='<div class="empty-state"><div class="big">📧</div><p>No emails yet — add your first one above!</p></div>';
+return;}
+grid.innerHTML=filtered.map(e=>`
+<div class="email-card" onclick="openModal(${e.id})">
+<div class="card-top" style="background:${colors[e.provider]||colors.Other}"></div>
+<div class="card-body">
+<div class="card-name">${esc(e.name)}</div>
+<div class="card-email">${esc(e.email)}</div>
+<span class="card-provider" style="background:${colors[e.provider]||colors.Other}20;color:${colors[e.provider]||colors.Other}">${e.provider}</span>
+<div class="card-date">Added ${e.date}</div>
+</div>
+<button class="card-del" onclick="deleteEmail(${e.id},event)">🗑</button>
+</div>`).join('');
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function openModal(id){
+const e=emails.find(x=>x.id===id);if(!e)return;
+currentId=id;passVisible=false;
+document.getElementById('modal-title').textContent=e.name;
+document.getElementById('modal-email').textContent=e.email;
+document.getElementById('modal-pass').textContent='••••••••••';
+document.getElementById('modal-date').textContent=e.date;
+document.getElementById('modal-notes').value=e.notes||'';
+const badge=document.getElementById('modal-provider-badge');
+badge.textContent=e.provider;
+badge.style.background=(colors[e.provider]||colors.Other)+'20';
+badge.style.color=colors[e.provider]||colors.Other;
+document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('show');currentId=null;}
+
+function togglePass(){
+const e=emails.find(x=>x.id===currentId);if(!e)return;
+passVisible=!passVisible;
+document.getElementById('modal-pass').textContent=passVisible?e.pass:'••••••••••';
+document.getElementById('modal-pass').classList.toggle('pw-dots',!passVisible);
+}
+
+function copyText(elId,btn){
+navigator.clipboard.writeText(document.getElementById(elId).textContent);
+btn.textContent='Copied!';btn.classList.add('copied');
+setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},1500);
+}
+
+function copyPass(btn){
+const e=emails.find(x=>x.id===currentId);if(!e)return;
+navigator.clipboard.writeText(e.pass);
+btn.textContent='Copied!';btn.classList.add('copied');
+setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},1500);
+}
+
+function saveNotes(){
+const e=emails.find(x=>x.id===currentId);if(!e)return;
+e.notes=document.getElementById('modal-notes').value;save();toast('Notes saved!');
+}
+
+renderEmails();
+</script>
+</body></html>
